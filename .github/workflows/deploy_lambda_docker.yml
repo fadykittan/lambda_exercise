@@ -17,6 +17,7 @@ jobs:
       # 2. Run Lambda tests
       - name: Run Lambda tests
         run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
           python3 simple_lambda_cicd/test/test.py
 
       # 3. Configure AWS credentials (from GitHub secrets)

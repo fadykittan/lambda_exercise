@@ -14,7 +14,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Configure AWS credentials (from GitHub secrets)
+      # 2. Run Lambda tests
+      - name: Run Lambda tests
+        run: |
+          python3 simple_lambda_cicd/test/test.py
+
+      # 3. Configure AWS credentials (from GitHub secrets)
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -22,12 +27,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # 3. Login to Amazon ECR
+      # 4. Login to Amazon ECR
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # 4. Build, tag, and push Docker image to ECR
+      # 5. Build, tag, and push Docker image to ECR
       - name: Build, tag, and push image to Amazon ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -37,7 +42,7 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./simple_lambda_cicd
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      # 5. Update Lambda function to use the new image
+      # 6. Update Lambda function to use the new image
       - name: Update Lambda function to use new image
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}

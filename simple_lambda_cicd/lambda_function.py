@@ -4,5 +4,5 @@ def lambda_handler(event, context):
     print("Hello World")
     return {
         'statusCode': 200,
-        'body': json.dumps('Hello from Lambda with CICD!')
+        'body': json.dumps('Hello World! from Lambda with CICD!')
     }

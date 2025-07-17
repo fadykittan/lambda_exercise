@@ -56,3 +56,26 @@ jobs:
             --function-name "$LAMBDA_FUNCTION_NAME" \
             --region "$AWS_REGION" \
             --image-uri "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+      # 7. Notify SNS of workflow result (success or failure)
+      - name: Notify SNS of workflow result
+        if: always()
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          SNS_TOPIC_ARN: ${{ secrets.SNS_TOPIC_ARN }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_JOB: ${{ github.job }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          STATUS="success"
+          if [ "${{ job.status }}" != "success" ]; then
+            STATUS="failure"
+          fi
+          MESSAGE="Workflow: $GITHUB_WORKFLOW\nJob: $GITHUB_JOB\nRepository: $GITHUB_REPOSITORY\nCommit: $GITHUB_SHA\nRun: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID\nStatus: $STATUS"
+          aws sns publish \
+            --region "$AWS_REGION" \
+            --topic-arn "$SNS_TOPIC_ARN" \
+            --message "$MESSAGE" \
+            --subject "GitHub Actions Workflow $STATUS: $GITHUB_WORKFLOW"
